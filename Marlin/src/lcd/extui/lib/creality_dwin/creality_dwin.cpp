@@ -820,10 +820,15 @@ void CrealityDWINClass::Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/
               #if ENABLED(FILAMENT_LOAD_UNLOAD_GCODES)
                 Draw_Menu(ChangeFilament);
               #else
+                if (thermalManager.temp_hotend[0].celsius < EXTRUDE_MINTEMP) {
+                Popup_Handler(ChangeFilTempWarn);
+                }
+                else {
                 Popup_Handler(FilChange);
                 gcode.process_subcommands_now_P(PSTR("M600 B1"));
                 planner.synchronize();
                 Redraw_Menu();
+                }               
               #endif
             }
             break;
@@ -1263,10 +1268,15 @@ void CrealityDWINClass::Menu_Item_Handler(uint8_t menu, uint8_t item, bool draw/
               Draw_Menu_Item(row, ICON_ResumeEEPROM, (char*)"Change Filament");
             }
             else {
-              Popup_Handler(FilChange);
-              gcode.process_subcommands_now_P(PSTR("M600 B1"));
-              planner.synchronize();
-              Redraw_Menu();
+              if (thermalManager.temp_hotend[0].celsius < EXTRUDE_MINTEMP) {
+                Popup_Handler(ChangeFilTempWarn);
+              }
+              else {
+                Popup_Handler(FilChange);
+                gcode.process_subcommands_now_P(PSTR("M600 B1"));
+                planner.synchronize();
+                Redraw_Menu();
+              }
             }
             break;
         }
@@ -2617,6 +2627,11 @@ void CrealityDWINClass::Popup_Handler(uint8_t popupid, bool option/*=false*/) {
       break;
     case PidDone:
       Draw_Popup((char*)"PID tuning done", (char*)"", (char*)"", Confirm, ICON_BLTouch);
+      break;
+    case ChangeFilTempWarn:
+      popup = UI;
+      last_process = Menu;
+      Draw_Popup((char*)"", (char*)"Nozzle temp too low!", (char*)"Preheat First!", Confirm, ICON_TempTooLow);
       break;
   }
 }
